@@ -21,7 +21,6 @@ export function map42UserToUserProfile(data: any): UserProfile {
     level: skill.level,
     percent: Math.round((skill.level % 1) * 100),
   }));
-  console.log('projects', data.projects_users[1], data.projects_users[1].project);
   const projects: ProjectProfile[] = (data.projects_users || []).map((p: any) => ({
     id: p.project?.id,
     name: p.project?.name,

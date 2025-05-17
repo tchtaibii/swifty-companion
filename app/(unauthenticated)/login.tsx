@@ -36,12 +36,12 @@ export default function LoginScreen() {
         if (refreshToken) {
           await get42MeProfile();
         }
-      } catch (e) {
+      } catch (_) {
         clearError();
       }
     };
     checkAuth();
-  }, []);
+  }, [get42MeProfile, clearError]);
 
   useEffect(() => {
     if (isAuthenticated) {

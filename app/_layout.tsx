@@ -31,7 +31,7 @@ const linking = {
   prefixes: ['swiftycompanion://'],
   config: {
     screens: {
-      'auth/callback': 'auth/callback',
+      // 'auth/callback': 'auth/callback',
     },
   },
 };
@@ -132,7 +132,7 @@ export default function RootLayout() {
             ) : (
               <Stack.Screen name="(auth)" />
             )}
-            <Stack.Screen name="auth/callback" />
+            {/* <Stack.Screen name="auth/callback" /> */}
             <Stack.Screen name="_not-found" options={{ title: 'Not Found' }} />
           </Stack>
           <PortalHost />

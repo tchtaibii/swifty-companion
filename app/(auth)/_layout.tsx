@@ -9,8 +9,10 @@ export default function AuthLayout() {
       }}
     >
       <Stack.Screen name="home" />
-      <Stack.Screen name="profile" />
-      <Stack.Screen name="settings" />
+      <Stack.Screen name="projects" />
+      <Stack.Screen name="profile/[id]" />
+      <Stack.Screen name="profile/projects" />
+      <Stack.Screen name="search" />
     </Stack>
   );
 }

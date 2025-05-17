@@ -54,7 +54,6 @@ export default function SearchPage() {
         params.append("filter[login]", searchQuery);
       }
       const response = await api.get(`/users?${params.toString()}`);
-      console.log(response.data);
       setSearchResults(response.data);
     } catch (err) {
       setError("Failed to search users. Please try again.");
