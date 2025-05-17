@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { signInWith42, exchangeCodeForToken } from '../api/42Signin';
-import { api, removeToken, setToken, setRefreshToken, getRefreshToken } from '../api/api';
+import { api, removeToken, getRefreshToken, getToken } from '../api/api';
 import { UserProfile } from '../types/types';
 import { map42UserToUserProfile } from '../lib/utils';
 
@@ -27,7 +27,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   get42MeProfile: async () => {
     try {
       const refreshToken = await getRefreshToken();
-      if (!refreshToken) return;
+      const accessToken = await getToken();
+      if (!refreshToken || !refreshToken.length || !accessToken || !accessToken.length) return;
       set({ isLoading: true, error: null });
       const { data } = await api.get('/me');
       const user = map42UserToUserProfile(data);

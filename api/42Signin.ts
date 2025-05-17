@@ -5,14 +5,12 @@ import { Platform } from 'react-native';
 
 const CLIENT_ID = Constants.expoConfig?.extra?.CLIENT_ID;
 const CLIENT_SECRET = Constants.expoConfig?.extra?.CLIENT_SECRET;
-const REDIRECT_URI = "swiftycompanion://auth/callback";
+const REDIRECT_URI = Constants.expoConfig?.extra?.REDIRECT_URI;
 const AUTH_URL = Constants.expoConfig?.extra?.AUTH_URL;
 const TOKEN_URL = Constants.expoConfig?.extra?.TOKEN_URL;
 
-// Register the custom URL scheme handler
 WebBrowser.maybeCompleteAuthSession();
 
-// Type definitions for the return values
 interface AuthResult {
   type?: 'success' | 'cancel' | 'webview_needed';
   authUrl?: string;
@@ -24,23 +22,16 @@ interface AuthResult {
 }
 
 export async function signInWith42(): Promise<AuthResult> {
-  // Check for missing env variables
-  if (!CLIENT_ID || !CLIENT_SECRET || !AUTH_URL || !TOKEN_URL) {
+  if (!CLIENT_ID || !CLIENT_SECRET || !AUTH_URL || !TOKEN_URL || !REDIRECT_URI) {
     throw new Error('Missing environment variables for 42 OAuth');
   }
 
-  try {
-    console.log('Using redirect URI:', REDIRECT_URI);
-    
-    // Create the OAuth URL
+  try {    
     const authUrl = `${AUTH_URL}?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code`;
-    console.log('Opening auth URL:', authUrl);
     
-    // Different flow for iOS vs Android
     if (Platform.OS === 'ios') {
       return await handleIOSAuth(authUrl);
     } else {
-      // For Android, return info to show the WebView
       return {
         type: 'webview_needed',
         authUrl: authUrl,
@@ -53,13 +44,10 @@ export async function signInWith42(): Promise<AuthResult> {
   }
 }
 
-// iOS-specific authentication flow
 async function handleIOSAuth(authUrl: string): Promise<AuthResult> {
   const result = await WebBrowser.openAuthSessionAsync(authUrl, REDIRECT_URI);
-  console.log('iOS browser result:', result);
   
   if (result.type === 'success' && result.url) {
-    // Extract code from URL using regex
     const codeMatch = result.url.match(/[?&]code=([^&]+)/);
     const code = codeMatch ? codeMatch[1] : null;
     
@@ -76,14 +64,10 @@ async function handleIOSAuth(authUrl: string): Promise<AuthResult> {
   }
 }
 
-// Exchange code for token - can be called from WebView success
 export async function exchangeCodeForToken(code: string): Promise<AuthResult> {
   if (!code) throw new Error('No code provided for token exchange');
-  
-  console.log('Exchanging code for token');
-  
+    
   try {
-    // Exchange code for access token
     const response = await fetch(TOKEN_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -99,7 +83,6 @@ export async function exchangeCodeForToken(code: string): Promise<AuthResult> {
     const data = await response.json();
     if (!data.access_token) throw new Error('No access token received');
     
-    // Save tokens
     await setToken(data.access_token);
     if (data.refresh_token) {
       await setRefreshToken(data.refresh_token);
