@@ -1,5 +1,5 @@
 import { DarkTheme, DefaultTheme, Theme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { Stack, useSegments, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as React from 'react';
 import { Platform, View, ActivityIndicator, StyleSheet } from 'react-native';
@@ -10,9 +10,9 @@ import { setAndroidNavigationBar } from '../lib/android-navigation-bar';
 import { useEffect, useState } from 'react';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../stores/authStore';
-import { useRouter, useSegments } from "expo-router";
 import { checkRequiredEnvVars } from '../lib/envCheck';
 import { MissingEnvError } from '../components/MissingEnvError';
+import * as Linking from 'expo-linking';
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
@@ -24,9 +24,17 @@ const DARK_THEME: Theme = {
 };
 
 export {
-  // Catch any errors thrown by the Layout component.
   ErrorBoundary,
 } from 'expo-router';
+
+const linking = {
+  prefixes: ['swiftycompanion://'],
+  config: {
+    screens: {
+      'auth/callback': 'auth/callback',
+    },
+  },
+};
 
 export default function RootLayout() {
   const [isLoading, setIsLoading] = useState(true);
@@ -37,8 +45,25 @@ export default function RootLayout() {
   const [isColorSchemeLoaded, setIsColorSchemeLoaded] = React.useState(false);
   const { isAuthenticated } = useAuthStore();
   
-  // Check for required environment variables
   const [envCheck, setEnvCheck] = useState(() => checkRequiredEnvVars());
+
+  useEffect(() => {
+    const handleDeepLink = (event: { url: string }) => {
+      console.log('Deep link received:', event.url);
+    };
+
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        console.log('App launched with deep link:', url);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   useIsomorphicLayoutEffect(() => {
     if (hasMounted.current) {
@@ -66,7 +91,6 @@ export default function RootLayout() {
   }, [isAuthenticated, segments, isLoading]);
 
   useEffect(() => {
-    // Simulate loading auth state
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
@@ -74,7 +98,6 @@ export default function RootLayout() {
     return () => clearTimeout(timer);
   }, []);
 
-  // If environment variables are missing, show the error screen
   if (!envCheck.isValid) {
     return <MissingEnvError missingVars={envCheck.missingVars} />;
   }
@@ -99,12 +122,17 @@ export default function RootLayout() {
       <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
         <StatusBar style={barStyle} backgroundColor={backgroundColor} translucent={false} />
         <SafeAreaView style={{ flex: 1, backgroundColor }} edges={['top', 'left', 'right']}> 
-          <Stack screenOptions={{ headerShown: false }}>
+          <Stack 
+            screenOptions={{ headerShown: false }}
+            // @ts-ignore - expo-router has incomplete types
+            linking={linking}
+          >
             {!isAuthenticated ? (
               <Stack.Screen name="(unauthenticated)" />
             ) : (
               <Stack.Screen name="(auth)" />
             )}
+            <Stack.Screen name="auth/callback" />
             <Stack.Screen name="_not-found" options={{ title: 'Not Found' }} />
           </Stack>
           <PortalHost />

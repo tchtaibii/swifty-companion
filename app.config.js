@@ -16,14 +16,20 @@ export default {
     "**/*"
   ],
   ios: {
-    supportsTablet: true
+    supportsTablet: true,
+    bundleIdentifier: "com.tchtaibi.swiftycompanion",
+    config: {
+      usesNonExemptEncryption: false
+    }
   },
   android: {
     adaptiveIcon: {
       foregroundImage: "./assets/adaptive-icon.png",
       backgroundColor: "#ffffff"
-    }
+    },
+    package: "com.tchtaibi.swiftycompanion"
   },
+  scheme: "swiftycompanion",
   web: {
     favicon: "./assets/favicon.png"
   },

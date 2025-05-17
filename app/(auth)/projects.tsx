@@ -15,7 +15,6 @@ export default function ProjectsPage() {
       <ProjectListCard>
         <Text style={styles.projectsTitleCard}>Projects</Text>
         {(() => {
-          // Sort: finished first, in_progress last
           const sortedProjects = [...user.projects].sort((a, b) => {
             if (a.status === "in_progress" && b.status !== "in_progress")
               return 1;

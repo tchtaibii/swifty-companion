@@ -2,7 +2,6 @@ import { useEffect, useState, useRef } from "react";
 import {
   View,
   TouchableOpacity,
-  Text,
   StyleSheet,
   TextInput,
 } from "react-native";
