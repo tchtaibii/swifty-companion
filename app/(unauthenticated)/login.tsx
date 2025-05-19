@@ -162,11 +162,17 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginTop: 20,
+    display : 'flex',
+    width : '100%',
+    flexDirection : 'row',
+    justifyContent : 'center'
   },
   button: {
     backgroundColor: "#007aff",
     padding: 16,
     borderRadius: 8,
+    width : "100%",
+    maxWidth : 500,
     alignItems: "center",
   },
   buttonText: {
