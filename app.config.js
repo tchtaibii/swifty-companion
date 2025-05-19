@@ -1,8 +1,8 @@
 import 'dotenv/config';
 
 export default {
-  name: "temp-project",
-  slug: "temp-project",
+  name: "Swifty Companion",
+  slug: "swifty-companion",
   version: "1.0.0",
   orientation: "portrait",
   icon: "./assets/icon.png",
