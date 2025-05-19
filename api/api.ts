@@ -2,6 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { useNetworkStore } from '../stores/networkStore';
+
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
 const ACCESS_TOKEN_KEY = 'access_token';
@@ -11,7 +12,7 @@ export const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
 });
-const { setIsConnected } = useNetworkStore();
+
 // Attach access token to every request if present
 api.interceptors.request.use(async (config) => {
   const token = await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
@@ -28,7 +29,7 @@ api.interceptors.response.use(
   async (error) => {
     // Check if it's a network error (no connection)
     if (!error.response && error.message === 'Network Error') {
-      setIsConnected(false);
+      useNetworkStore.getState().setIsConnected(false);
       return Promise.reject(error);
     }
 
