@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, View, StyleSheet, SafeAreaView, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
 import { WebView, WebViewNavigation } from 'react-native-webview';
 import { StatusBar } from 'expo-status-bar';
-import { router } from 'expo-router';
+import { useNetworkStore } from '../stores/networkStore';
 
 interface OAuthWebViewProps {
   url: string;
@@ -15,6 +15,7 @@ interface OAuthWebViewProps {
 export function OAuthWebView({ url, redirectUri, visible, onClose, onSuccess }: OAuthWebViewProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { setIsConnected } = useNetworkStore();
 
   useEffect(() => {
     setLoading(true);
@@ -38,11 +39,10 @@ export function OAuthWebView({ url, redirectUri, visible, onClose, onSuccess }: 
     console.log('WebView error:', nativeEvent);
     setLoading(false);
     
-    // Check if it's a network error
     if (nativeEvent.description?.includes('net::') || 
         nativeEvent.description?.includes('ERR_CONNECTION_') ||
         nativeEvent.description?.includes('ERR_INTERNET_DISCONNECTED')) {
-      router.replace('/no-connection');
+      setIsConnected(false);
     } else {
       setError('Failed to load authentication page. Please try again.');
     }
