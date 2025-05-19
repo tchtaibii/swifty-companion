@@ -4,6 +4,7 @@ import Constants from 'expo-constants';
 import { useNetworkStore } from '../stores/networkStore';
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
+const TOKEN_URL = Constants.expoConfig?.extra?.TOKEN_URL;
 
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
@@ -68,14 +69,45 @@ export const removeToken = async () => {
   await AsyncStorage.removeItem(REFRESH_TOKEN_KEY);
 };
 
-// Function to refresh the access token
+// Function to refresh the access token for 42 API
 async function refreshToken() {
-  const refresh_token = await getRefreshToken();
-  if (!refresh_token) throw new Error('No refresh token');
-  // Adjust the endpoint and payload as per your API
-  const response = await axios.post(`${API_BASE_URL}/auth/refresh`, { refresh_token });
-  const { access_token, refresh_token: new_refresh_token } = response.data;
-  await setToken(access_token);
-  if (new_refresh_token) await setRefreshToken(new_refresh_token);
-  return access_token;
+  const uid = Constants.expoConfig?.extra?.UUID;
+  const client = Constants.expoConfig?.extra?.CLIENT_ID;
+  
+  if (!uid || !client) {
+    throw new Error('Missing 42 API credentials');
+  }
+
+  try {
+    const response = await axios.post(
+      TOKEN_URL,
+      {
+        grant_type: 'refresh_token',
+        client_id: uid,
+        client_secret: client,
+        refresh_token: await getRefreshToken(),
+      },
+      { timeout: 2000 }
+    );
+
+    const { access_token } = response.data;
+    await setToken(access_token);
+    return access_token;
+  } catch (error) {
+    console.error('Error refreshing 42 API token:', error);
+    throw error;
+  }
 }
+
+// Test function to verify token refresh
+export const testTokenRefresh = async () => {
+  try {
+    console.log('Testing token refresh...');
+    const newToken = await refreshToken();
+    console.log('New token obtained:', newToken);
+    return newToken;
+  } catch (error) {
+    console.error('Token refresh test failed:', error);
+    throw error;
+  }
+};

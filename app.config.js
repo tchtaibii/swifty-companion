@@ -47,6 +47,7 @@ export default {
     REDIRECT_URI: process.env.REDIRECT_URI,
     AUTH_URL: process.env.AUTH_URL,
     TOKEN_URL: process.env.TOKEN_URL,
+    UUID: process.env.UUID,
     eas: {
       projectId: "your-project-id"
     }

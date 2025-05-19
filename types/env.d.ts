@@ -5,4 +5,5 @@ declare module '@env' {
   export const AUTH_URL: string;
   export const TOKEN_URL: string;
   export const API_BASE_URL: string;
+  export const UUID: string;
 }
