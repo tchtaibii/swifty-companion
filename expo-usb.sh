@@ -4,6 +4,77 @@ command_exists () {
     command -v "$1" >/dev/null 2>&1
 }
 
+#!/bin/bash
+
+set -e
+
+echo "Checking if adb is installed..."
+if command -v adb &> /dev/null; then
+  echo "adb is installed."
+else
+  echo "adb is NOT installed."
+fi
+
+# Detect OS type for correct download link
+OS_TYPE=$(uname -s)
+if [[ "$OS_TYPE" == "Linux" ]]; then
+  SDK_URL="https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip"
+elif [[ "$OS_TYPE" == "Darwin" ]]; then
+  SDK_URL="https://dl.google.com/android/repository/commandlinetools-mac-9477386_latest.zip"
+else
+  echo "Unsupported OS: $OS_TYPE"
+  exit 1
+fi
+
+ANDROID_ROOT="$HOME/Android"
+CMDLINE_TOOLS_DIR="$ANDROID_ROOT/cmdline-tools/latest"
+
+# Function to check if SDK exists
+function sdk_exists() {
+  [ -d "$ANDROID_ROOT/platform-tools" ] && [ -d "$CMDLINE_TOOLS_DIR" ]
+}
+
+if [ -z "$ANDROID_HOME" ]; then
+  if sdk_exists; then
+    export ANDROID_HOME="$ANDROID_ROOT"
+    echo "Found existing Android SDK at $ANDROID_HOME"
+  else
+    echo "Android SDK not found. Installing to $ANDROID_ROOT ..."
+    mkdir -p "$ANDROID_ROOT"
+
+    TMP_ZIP="/tmp/cmdline-tools.zip"
+    echo "Downloading Android command line tools..."
+    curl -o "$TMP_ZIP" -L "$SDK_URL" || { echo "Download failed"; exit 1; }
+
+    mkdir -p "$ANDROID_ROOT/cmdline-tools"
+    rm -rf "$CMDLINE_TOOLS_DIR"
+
+    echo "Extracting..."
+    unzip -q "$TMP_ZIP" -d "$ANDROID_ROOT/cmdline-tools"
+
+    # Move extracted folder to 'latest'
+    mv "$ANDROID_ROOT/cmdline-tools/cmdline-tools" "$CMDLINE_TOOLS_DIR"
+
+    rm "$TMP_ZIP"
+
+    export ANDROID_HOME="$ANDROID_ROOT"
+    echo "Android command line tools installed at $CMDLINE_TOOLS_DIR"
+
+    # Add to PATH temporarily
+    export PATH="$CMDLINE_TOOLS_DIR/bin:$ANDROID_HOME/platform-tools:$PATH"
+
+    echo "Installing platform-tools (adb)..."
+    yes | sdkmanager --sdk_root="$ANDROID_HOME" "platform-tools" >/dev/null
+
+    echo "Android SDK platform-tools installed."
+  fi
+else
+  echo "ANDROID_HOME is set to $ANDROID_HOME"
+fi
+
+# Ensure platform-tools path is in PATH
+export PATH="$ANDROID_HOME/platform-tools:$PATH"
+
 echo "Checking if adb is installed..."
 
 if ! command_exists adb ; then
