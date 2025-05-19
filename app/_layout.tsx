@@ -159,3 +159,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
 });
+
+
+if(__DEV__) {
+  console.warn = () => {};
+}

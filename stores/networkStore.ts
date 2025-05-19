@@ -6,6 +6,6 @@ interface networkState {
 }
 
 export const useNetworkStore = create<networkState>((set) => ({
-  isConnected: false,
+  isConnected: true,
   setIsConnected: (isConnected: boolean) => set({ isConnected }),
 })); 
