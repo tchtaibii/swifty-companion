@@ -57,7 +57,6 @@ export default function SearchPage() {
       setSearchResults(response.data);
     } catch (err) {
       setError("Failed to search users. Please try again.");
-      console.error("Search error:", err);
     } finally {
       setIsLoading(false);
     }

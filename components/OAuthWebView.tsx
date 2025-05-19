@@ -28,8 +28,6 @@ export function OAuthWebView({ url, redirectUri, visible, onClose, onSuccess }: 
       const codeMatch = url.match(/[?&]code=([^&]+)/);
       if (codeMatch && codeMatch[1]) {
         onSuccess(codeMatch[1]);
-      } else {
-        console.error('No authorization code found in redirect URL');
       }
       onClose();
     }

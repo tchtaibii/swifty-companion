@@ -35,7 +35,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ user, isAuthenticated: true, isLoading: false });
       return user;
     } catch (error: any) {
-      console.error('Failed to get profile:', error);
       set({ isLoading: false, error: error.message });
       throw error;
     }
@@ -53,7 +52,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ isLoading: false });
       return result;
     } catch (error: any) {
-      console.error('Login failed:', error);
       set({ isLoading: false, error: error.message });
       throw error;
     }
@@ -72,7 +70,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       set({ isLoading: false });
     } catch (error: any) {
-      console.error('Authentication failed:', error);
       set({ isLoading: false, error: error.message });
       throw error;
     }

@@ -42,7 +42,6 @@ export default function ProfileScreen() {
     //   setProfile(map42UserToUserProfile(response.data));
     } catch (error) {
       setError("Error fetching user, please try again");
-      console.error("Error fetching user:", error);
     } finally {
       setIsLoading(false);
     }
