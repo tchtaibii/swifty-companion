@@ -1,6 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
+import { router } from 'expo-router';
 
 const API_BASE_URL = Constants.expoConfig?.extra?.API_BASE_URL;
 
@@ -21,6 +22,33 @@ api.interceptors.request.use(async (config) => {
   }
   return config;
 });
+
+// Response interceptor to handle connection errors
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    // Check if it's a network error (no connection)
+    if (!error.response && error.message === 'Network Error') {
+      router.replace('/no-connection');
+      return Promise.reject(error);
+    }
+
+    // Handle 401 and refresh token logic
+    const originalRequest = error.config;
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      try {
+        const newToken = await refreshToken();
+        originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        await removeToken();
+        return Promise.reject(refreshError);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Refresh token logic
 export const setToken = async (token: string) => {
@@ -51,24 +79,3 @@ async function refreshToken() {
   if (new_refresh_token) await setRefreshToken(new_refresh_token);
   return access_token;
 }
-
-// Response interceptor to handle 401 and refresh
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    if (error.response && error.response.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        const newToken = await refreshToken();
-        originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-        return api(originalRequest);
-      } catch (refreshError) {
-        await removeToken();
-        // Optionally: trigger logout in your app here
-        return Promise.reject(refreshError);
-      }
-    }
-    return Promise.reject(error);
-  }
-);

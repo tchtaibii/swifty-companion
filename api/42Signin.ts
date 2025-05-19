@@ -2,6 +2,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { setToken, setRefreshToken } from './api';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import { router } from 'expo-router';
 
 const CLIENT_ID = Constants.expoConfig?.extra?.CLIENT_ID;
 const CLIENT_SECRET = Constants.expoConfig?.extra?.CLIENT_SECRET;
@@ -12,7 +13,7 @@ const TOKEN_URL = Constants.expoConfig?.extra?.TOKEN_URL;
 WebBrowser.maybeCompleteAuthSession();
 
 interface AuthResult {
-  type?: 'success' | 'cancel' | 'webview_needed';
+  type?: 'success' | 'cancel' | 'webview_needed' | 'error';
   authUrl?: string;
   redirectUri?: string;
   access_token?: string;
@@ -40,27 +41,38 @@ export async function signInWith42(): Promise<AuthResult> {
     }
   } catch (e) {
     console.log('42 OAuth error:', e);
-    return { error: e };
+    if (e instanceof Error && e.message === 'Network Error') {
+      router.replace('/no-connection');
+    }
+    return { type: 'error', error: e };
   }
 }
 
 async function handleIOSAuth(authUrl: string): Promise<AuthResult> {
-  const result = await WebBrowser.openAuthSessionAsync(authUrl, REDIRECT_URI);
-  
-  if (result.type === 'success' && result.url) {
-    const codeMatch = result.url.match(/[?&]code=([^&]+)/);
-    const code = codeMatch ? codeMatch[1] : null;
+  try {
+    const result = await WebBrowser.openAuthSessionAsync(authUrl, REDIRECT_URI);
     
-    if (!code) {
-      throw new Error('No code found in redirect URL');
+    if (result.type === 'success' && result.url) {
+      const codeMatch = result.url.match(/[?&]code=([^&]+)/);
+      const code = codeMatch ? codeMatch[1] : null;
+      
+      if (!code) {
+        throw new Error('No code found in redirect URL');
+      }
+      
+      return await exchangeCodeForToken(code);
+    } else if (result.type === 'cancel') {
+      console.log('Authentication cancelled by user');
+      return { cancelled: true };
+    } else {
+      throw new Error(`Authentication failed: ${result.type}`);
     }
-    
-    return await exchangeCodeForToken(code);
-  } else if (result.type === 'cancel') {
-    console.log('Authentication cancelled by user');
-    return { cancelled: true };
-  } else {
-    throw new Error(`Authentication failed: ${result.type}`);
+  } catch (e) {
+    console.log('iOS Auth error:', e);
+    if (e instanceof Error && e.message === 'Network Error') {
+      router.replace('/no-connection');
+    }
+    return { type: 'error', error: e };
   }
 }
 
@@ -91,6 +103,9 @@ export async function exchangeCodeForToken(code: string): Promise<AuthResult> {
     return data;
   } catch (e) {
     console.log('Token exchange error:', e);
+    if (e instanceof Error && e.message === 'Network Error') {
+      router.replace('/no-connection');
+    }
     throw e;
   }
 }
