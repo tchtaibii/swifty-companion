@@ -47,6 +47,12 @@ api.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
+
+    if (axios.isAxiosError(error)) {
+      console.error('Response data:', error.response?.data);
+      console.error('Response status:', error.response?.status);
+    }
+
     return Promise.reject(error);
   }
 );
@@ -72,22 +78,29 @@ export const removeToken = async () => {
 // Function to refresh the access token for 42 API
 async function refreshToken() {
   const uid = Constants.expoConfig?.extra?.UUID;
-  const client = Constants.expoConfig?.extra?.CLIENT_ID;
+  const client_id = Constants.expoConfig?.extra?.CLIENT_ID;
+  const client_secret = Constants.expoConfig?.extra?.CLIENT_SECRET;
+  const refresh_token = await getRefreshToken();
   
-  if (!uid || !client) {
+  if (!uid || !client_id || !client_secret) {
     throw new Error('Missing 42 API credentials');
   }
 
   try {
     const response = await axios.post(
       TOKEN_URL,
-      {
+      new URLSearchParams({
         grant_type: 'refresh_token',
-        client_id: uid,
-        client_secret: client,
-        refresh_token: await getRefreshToken(),
-      },
-      { timeout: 2000 }
+        client_id: client_id,
+        client_secret: client_secret,
+        refresh_token: refresh_token
+      } as any).toString(),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        timeout: 2000
+      }
     );
 
     const { access_token } = response.data;
