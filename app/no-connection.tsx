@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { NoInternetScreen } from '../components/NoInternetScreen';
-import { router } from 'expo-router';
-
+import { useNetworkStore } from '../stores/networkStore';
 export default function NoConnectionScreen() {
+  const { setIsConnected } = useNetworkStore();
   const handleRetry = async () => {
     try {
       // Try to make a request to check connection
@@ -13,7 +13,7 @@ export default function NoConnectionScreen() {
         cache: 'no-cache'
       });
       // If successful, go back to the previous screen
-      router.back();
+      setIsConnected(true);
     } catch (error) {
       // If still no connection, stay on this screen
       console.log('Still no internet connection');

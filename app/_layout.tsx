@@ -13,7 +13,8 @@ import { useAuthStore } from '../stores/authStore';
 import { checkRequiredEnvVars } from '../lib/envCheck';
 import { MissingEnvError } from '../components/MissingEnvError';
 import * as Linking from 'expo-linking';
-
+import { useNetworkStore } from '../stores/networkStore';
+import NoConnectionScreen from './no-connection';
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
   colors: NAV_THEME.light,
@@ -44,7 +45,7 @@ export default function RootLayout() {
   const hasMounted = React.useRef(false);
   const [isColorSchemeLoaded, setIsColorSchemeLoaded] = React.useState(false);
   const { isAuthenticated } = useAuthStore();
-  
+  const { isConnected } = useNetworkStore();
   const [envCheck, setEnvCheck] = useState(() => checkRequiredEnvVars());
 
   useEffect(() => {
@@ -122,8 +123,10 @@ export default function RootLayout() {
       <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
         <StatusBar style={barStyle} backgroundColor={backgroundColor} translucent={false} />
         <SafeAreaView style={{ flex: 1, backgroundColor }} edges={['top', 'left', 'right']}> 
-          <Stack 
-            screenOptions={{ headerShown: false }}
+          {
+            isConnected ? (
+              <Stack 
+                screenOptions={{ headerShown: false }}
             // @ts-ignore - expo-router has incomplete types
             linking={linking}
           >
@@ -135,6 +138,9 @@ export default function RootLayout() {
             {/* <Stack.Screen name="auth/callback" /> */}
             <Stack.Screen name="_not-found" options={{ title: 'Not Found' }} />
           </Stack>
+          ) : (
+            <NoConnectionScreen />
+          )}
           <PortalHost />
         </SafeAreaView>
       </ThemeProvider>
